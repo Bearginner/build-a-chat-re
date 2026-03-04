@@ -54,7 +54,7 @@
           </div>
         
           <button @click="onGuestAccess" type="button" class="btn-secondary w-full border-2 border-blue-100 
-          hover:bg-blue-50 text-blue-600 transition-all font-semibold":disabled="loading"> Acceder como invitado </button>
+          hover:bg-blue-50 text-blue-600 transition-all font-semibold":disabled="loading"> </button>
             Acceso como invitado
         </div>
 
@@ -72,7 +72,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { login } from '../services/api';
+import { login, guestLogin} from '../services/api';
 import { useRouter } from 'vue-router';
 import { useAuth } from '../store/auth';
 
@@ -98,12 +98,30 @@ async function onSubmit(){
       nombre_usuario: identifier.value,
       password: password.value
     });
+  handleResponse(response);
+  } catch (error) {
+    handleError(error);
+  }
+}
+
+async function onGuestAccess(){
+  loading.value = true;
+  message.value = '';
+  try {
+    const response = await guestLogin();
+    handleResponse(response);
+  } catch (error) {
+    handleError(error);
+  }
+}
+
+function handleResponse(response: any) {
     if (response.success) {
       message.value = response.msg || '¡Inicio de sesión exitoso!';
       messageType.value = 'ok';
       
       // Update global auth state
-      authLogin(String(response.user_id), identifier.value, response.role);
+      authLogin(String(response.user_id), response.username || 'Invitado', response.role || 'guest');
       
       // Navigate to dashboard after a brief delay
       setTimeout(() => {
@@ -114,11 +132,12 @@ async function onSubmit(){
       messageType.value = 'error';
       loading.value = false;
     }
-  } catch (error) {
+}
+
+function handleError(error: any) {
     message.value = error instanceof Error ? error.message : 'Error al iniciar sesión';
     messageType.value = 'error';
     loading.value = false;
-  }
 }
 </script>
 

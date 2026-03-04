@@ -18,6 +18,15 @@ async function request<T>(path: string, options: RequestInit): Promise<ApiRespon
   return body as ApiResponse<T>;
 }
 
+export async function guestLogin(){
+  const response = await fetch(`${i}/auth/guest`, {
+    method: 'POST',
+    headers: { "Content-Type": "application/json" },
+    credentials: "include" 
+  });
+  return response.json();
+}
+
 export function login(payload: { nombre_usuario: string; password: string }) {
   return request<{ msg: string; user_id: number; role: string }>(`/auth/login`, {
     method: 'POST',
