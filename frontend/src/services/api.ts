@@ -19,7 +19,7 @@ async function request<T>(path: string, options: RequestInit): Promise<ApiRespon
 }
 
 export async function guestLogin(){
-  const response = await fetch(`${i}/auth/guest`, {
+  const response = await fetch(`${API_BASE_URL}/auth/guest`, {
     method: 'POST',
     headers: { "Content-Type": "application/json" },
     credentials: "include" 

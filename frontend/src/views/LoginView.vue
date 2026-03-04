@@ -54,8 +54,7 @@
           </div>
         
           <button @click="onGuestAccess" type="button" class="btn-secondary w-full border-2 border-blue-100 
-          hover:bg-blue-50 text-blue-600 transition-all font-semibold":disabled="loading"> </button>
-            Acceso como invitado
+          hover:bg-blue-50 text-blue-600 transition-all font-semibold":disabled="loading"> Acceder como invitado </button>
         </div>
 
       <p class="mt-6 text-center text-sm text-gray-600">
