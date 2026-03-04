@@ -1,5 +1,5 @@
 
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, session
 from flask_login import login_user, logout_user, current_user, login_required
 from .services import (
     register_user, authenticate_user, 
@@ -35,6 +35,14 @@ from .services import (
 )
 
 main = Blueprint('main', __name__)
+
+@main.route('/auth/guest', methods=['POST'])
+def guest_login():
+    guest_id = f"guest_{os.urandom(4).hex()}"
+    session['is_guest'] = True
+    session['guest_id'] = guest_id
+    
+    return jsonify({'success': True, 'user': {'username': 'Invitado', 'role': 'guest', 'id': guest_id}}), 200
 
 @main.route('/auth/register', methods=['POST'])
 def register():

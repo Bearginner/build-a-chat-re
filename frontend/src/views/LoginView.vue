@@ -46,6 +46,18 @@
         </div>
       </form>
       
+        <div class="mt-6 space-y-4">
+          <div class="relative flex items-center justify-center">
+            <div class="border-t border-gray-200 w-full"></div>
+            <span class="bg-white px-3 text-xs text-gray-400 uppercase absolute"> O continúa como invitado</span>
+            <div class="border-t border-gray-200 w-full"></div>
+          </div>
+        
+          <button @click="onGuestAccess" type="button" class="btn-secondary w-full border-2 border-blue-100 
+          hover:bg-blue-50 text-blue-600 transition-all font-semibold":disabled="loading"> Acceder como invitado </button>
+            Acceso como invitado
+        </div>
+
       <p class="mt-6 text-center text-sm text-gray-600">
         ¿No tienes cuenta?
         <RouterLink to="/register" class="font-medium text-blue-600 hover:text-blue-500 transition-colors">Regístrate ya</RouterLink>
