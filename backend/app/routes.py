@@ -1,4 +1,4 @@
-
+import uuid 
 from flask import Blueprint, request, jsonify, session
 from flask_login import login_user, logout_user, current_user, login_required
 from .services import (
@@ -38,11 +38,17 @@ main = Blueprint('main', __name__)
 
 @main.route('/auth/guest', methods=['POST'])
 def guest_login():
-    guest_id = f"guest_{os.urandom(4).hex()}"
-    session['is_guest'] = True
-    session['guest_id'] = guest_id
+    try: 
+        temp_id = str(uuid.uuid4())[:8]
     
-    return jsonify({'success': True, 'user': {'username': 'Invitado', 'role': 'guest', 'id': guest_id}}), 200
+        return jsonify({'success': True,
+            'user_id': f"guest_{temp_id}",
+            'username': f"Invitado_{temp_id}",
+            'role': 'guest',
+            'msg': 'Acceso como invitado concedido'}), 200
+    
+    except Exception as e:
+        return jsonify({'success': False, 'error': 'Error al generar usuario invitado'}), 500
 
 @main.route('/auth/register', methods=['POST'])
 def register():
