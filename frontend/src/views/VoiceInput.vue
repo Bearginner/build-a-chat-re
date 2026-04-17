@@ -1,5 +1,5 @@
 <template>
-    <button @click="toggleListen" class="listen-button" type="button">
+    <button @click="toggleListen" :class="{'is-listening': isListening}" type="button">
         {{ isListening ? 'Detener' : 'Escuchar' }}
     </button>
 </template>

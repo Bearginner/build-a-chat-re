@@ -42,8 +42,8 @@ def guest_login():
         temp_id = str(uuid.uuid4())[:8]
     
         return jsonify({'success': True,
-            'user_id': f"guest_{temp_id}",
-            'username': f"Invitado_{temp_id}",
+            'user_id': f"guest",
+            'username': f"Invitado",
             'role': 'guest',
             'msg': 'Acceso como invitado concedido'}), 200
     
