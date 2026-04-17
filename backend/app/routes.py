@@ -36,20 +36,6 @@ from .services import (
 
 main = Blueprint('main', __name__)
 
-@main.route('/auth/guest', methods=['POST'])
-def guest_login():
-    try: 
-        temp_id = str(uuid.uuid4())[:8]
-    
-        return jsonify({'success': True,
-            'user_id': f"guest",
-            'username': f"Invitado",
-            'role': 'guest',
-            'msg': 'Acceso como invitado concedido'}), 200
-    
-    except Exception as e:
-        return jsonify({'success': False, 'error': 'Error al generar usuario invitado'}), 500
-
 @main.route('/auth/register', methods=['POST'])
 def register():
     data = request.json
@@ -75,6 +61,20 @@ def login():
     except Exception as e:
         print(f"LOGIN ERROR: {e}")
         return jsonify({'success': False, 'error': 'Error interno del servidor'}), 500
+
+@main.route('/auth/guest', methods=['POST'])
+def guest_login():
+    try: 
+        temp_id = str(uuid.uuid4())[:8]
+    
+        return jsonify({'success': True,
+            'user_id': f"guest",
+            'username': f"Invitado",
+            'role': 'guest',
+            'msg': 'Acceso como invitado concedido'}), 200
+    
+    except Exception as e:
+        return jsonify({'success': False, 'error': 'Error al generar usuario invitado'}), 500
 
 @main.route('/auth/logout', methods=['GET', 'POST'])
 def logout():

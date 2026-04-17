@@ -17,11 +17,19 @@ if (SpeechRecognition) {
     recognition = new SpeechRecognition();
     recognition.lang = 'es-ES';
     recognition.continious = false;
+    recognition.interimResults = false;
 
     recognition.onstart = (event) => {
         const transcript= event.results[0][0].transcript;
-        emit('update:text', transcript);
+        if (transcript) {
+             emit('update:text', transcript);
+        } 
     };
+
+    recognition.onerror = (event) => {
+        console.error("Error de reconocimiento de voz", event.error);
+        isListening.value = false;
+    }
 }
 
 const toggleListen = () => {
@@ -33,7 +41,7 @@ const toggleListen = () => {
 };
 </script>
 
-<style>
+<style scoped>
 .is_listening {
     background-color: #FF4D4D;
     color: white;
