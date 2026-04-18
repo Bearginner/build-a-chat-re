@@ -19,8 +19,15 @@ if (SpeechRecognition) {
     recognition.continious = false;
     recognition.interimResults = false;
 
-    recognition.onstart = (event) => {
-        const transcript= event.results[0][0].transcript;
+    recognition.onstart = () => {
+        isListening.value= true;
+    }
+    recognition.onend = () => {
+        isListening.value = false;
+    }
+
+    recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
         if (transcript) {
              emit('update:text', transcript);
         } 
