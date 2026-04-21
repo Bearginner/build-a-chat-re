@@ -49,15 +49,5 @@ const toggleListen = () => {
 </script>
 
 <style scoped>
-.is_listening {
-    background-color: #FF4D4D;
-    color: white;
-    animation: pulse 1s infinite;
-}
 
-@keyframes pulse {
- 0% { opacity: 1; }
- 50% { opacity: 0.5; }
- 100% { opacity: 1; }
-}
 </style>

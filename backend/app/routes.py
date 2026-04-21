@@ -55,7 +55,7 @@ def login():
         identifier = data.get('username') or data.get('email')
         user = authenticate_user(identifier, data.get('password'))
         login_user(user)
-        return jsonify({'success': True, 'msg': 'Inicio de sesión exitoso', 'user_id': user.id, 'role': user.role}), 200
+        return jsonify({'success': True, 'msg': 'Inicio de sesión exitoso', 'user_id': user.id, 'username': user.username,'role': user.role}), 200
     except ValueError as e:
         return jsonify({'success': False, 'error': str(e)}), 401
     except Exception as e:
