@@ -29,8 +29,8 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true }
   },
   {
-    path: '/admin/chats',
-    name: 'admin-chats',
+    path: '/creator/chats',
+    name: 'creator-chats',
     component: () => import('../views/AdminChatView.vue'),
     meta: { requiresAuth: true }
   },
