@@ -29,9 +29,9 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true }
   },
   {
-    path: '/creator/chats',
-    name: 'creator-chats',
-    component: () => import('../views/CreatorChatView.vue'),
+    path: '/admin/chats',
+    name: 'admin-chats',
+    component: () => import('../views/AdminChatView.vue'),
     meta: { requiresAuth: true }
   },
   // Redirect old chat route to dashboard

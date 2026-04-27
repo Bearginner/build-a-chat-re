@@ -69,6 +69,7 @@
                 placeholder="Escribe una respuesta..." 
                 class="flex-1 px-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none bg-gray-50"
               >
+              <VoiceInput @update:text="(val) => newMessage = val" />
               <button type="submit" class="p-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition-colors shadow-md" :disabled="!newMessage.trim()">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
               </button>
@@ -82,6 +83,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, nextTick } from 'vue';
+import VoiceInput from './VoiceInput.vue';
 import { io, Socket } from 'socket.io-client';
 import { useAuth } from '../store/auth';
 
