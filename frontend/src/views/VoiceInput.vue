@@ -7,6 +7,9 @@
 <script setup>
 import { ref } from 'vue';
 
+const handleVoiceText = (text) => {
+    newMessage.value = text;
+};
 const emit = defineEmits(['update:text']);
 const isListening = ref(false);
 
@@ -16,8 +19,8 @@ let recognition = null;
 if (SpeechRecognition) {
     recognition = new SpeechRecognition();
     recognition.lang = 'es-ES';
-    recognition.continious = false;
-    recognition.interimResults = false;
+    recognition.continious = true;
+    recognition.interimResults = true;
 
     recognition.onstart = () => {
         isListening.value= true;
@@ -27,10 +30,15 @@ if (SpeechRecognition) {
     }
 
     recognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        if (transcript) {
-             emit('update:text', transcript);
-        } 
+        let transcript = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          if (event.results[i].isFinal) {
+             transcript += event.results[i][0].transcript;
+          } else {
+             transcript += event.results[i][0].transcript;
+          }  
+       } 
+       emit('update:text', transcript);
     };
 
     recognition.onerror = (event) => {
