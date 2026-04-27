@@ -10,7 +10,7 @@ user_roles_enum = db.Enum('admin', 'creator', 'user', name='user_roles')
 visibility_enum = db.Enum('public', 'private', 'link_only', name='visibility_types')
 session_types_enum = db.Enum('ai_conversation', 'human_support', name='session_types')
 session_status_enum = db.Enum('active', 'resolved', 'archived', name='session_status')
-sender_types_enum = db.Enum('user', 'admin', 'ai', 'system', name='sender_types')
+sender_types_enum = db.Enum('user', 'creator', 'ai', 'system', name='sender_types')
 
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
@@ -22,14 +22,14 @@ class User(UserMixin, db.Model):
     role = db.Column(user_roles_enum, default='user', nullable=False)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
-    chatbots = db.relationship('Chatbot', backref='admin', lazy=True)
+    chatbots = db.relationship('Chatbot', backref='creator', lazy=True)
     messages = db.relationship('Message', backref='sender', lazy=True)
 
 class Chatbot(db.Model):
     __tablename__ = 'chatbots'
 
     id = db.Column(db.Integer, primary_key=True)
-    admin_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    creator_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     title = db.Column(db.String(100), nullable=False, index=True)
     description = db.Column(db.Text)
     visibility = db.Column(visibility_enum, default='private', nullable=False)
