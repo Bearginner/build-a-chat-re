@@ -1,11 +1,14 @@
 <template>
-    <button @click="toggleListen" :class="{'is-listening': isListening}" type="button">
-        {{ isListening ? 'Detener' : 'Escuchar' }}
+    <button @click="toggleListen" :class="['mic-btn', {'is-listening': isListening}]" type="button">
+        <Mic v-if = "!isListening" :size = "20" color = "#FFFFFF" />
+        <Square v-else :size = "20"  color = "#FFFFFF" />
+        <div v-if = "isListening" class = "pulse-mic"> </div>
     </button>
 </template>
 
 <script setup>
 import { ref } from 'vue';
+import { Mic, Square } from 'lucide-vue-next';
 
 const handleVoiceText = (text) => {
     newMessage.value = text;
@@ -57,5 +60,47 @@ const toggleListen = () => {
 </script>
 
 <style scoped>
+.mic-btn {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    background-color: #0066FF;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
 
+.mic-btn:hover{
+    background-color: #0052CC;
+    transform: translateY(-1px);
+}
+
+.is-listening {
+    background-color: #EF4444;
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
+}
+
+.pulse-mic {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border: 2px solid #EF4444;
+    border-radius: 10px;
+    animation: ripple 1.5s infinite ease-out;
+}
+
+@keyframes ripple {
+    0% {
+        transform: scale(1);
+        opacity: 0.8;
+    }
+
+    100% {
+        transform: scale(1.6);
+        opacity: 0;
+    }
+}
 </style>
