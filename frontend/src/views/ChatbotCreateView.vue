@@ -11,6 +11,12 @@
           <button @click="$router.push('/dashboard')" class="px-4 py-2 rounded-xl text-gray-600 hover:bg-gray-100 font-medium transition-colors">
             Cancelar
           </button>
+          <button @click="Importar" class="px-4 py-2 rounded-xl text-gray-600 hover:bg-gray-100 font-medium transition-colors">
+            Importar
+          </button>
+           <button @click="Exportar" class="px-4 py-2 rounded-xl text-gray-600 hover:bg-gray-100 font-medium transition-colors">
+            Exportar
+          </button>
           <button @click="saveChatbot" :disabled="saving" class="px-6 py-2 rounded-xl bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200 disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2">
             <span v-if="saving" class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>
             {{ saving ? 'Guardando...' : 'Publicar Chatbot' }}

@@ -62,8 +62,8 @@ const toggleListen = () => {
 <style scoped>
 .mic-btn {
     position: relative;
-    width: 40px;
-    height: 40px;
+    width: 45px;
+    height: 45px;
     background-color: #0066FF;
     border-radius: 14px;
     display: flex;
