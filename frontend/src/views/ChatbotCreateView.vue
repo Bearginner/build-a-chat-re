@@ -14,7 +14,7 @@
           <button @click="Importar" class="px-4 py-2 rounded-xl text-gray-600 hover:bg-gray-100 font-medium transition-colors">
             Importar
           </button>
-           <button @click="Exportar" class="px-4 py-2 rounded-xl text-gray-600 hover:bg-gray-100 font-medium transition-colors">
+           <button @click="download" class="px-4 py-2 rounded-xl text-gray-600 hover:bg-gray-100 font-medium transition-colors">
             Exportar
           </button>
           <button @click="saveChatbot" :disabled="saving" class="px-6 py-2 rounded-xl bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200 disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2">
@@ -153,6 +153,7 @@ import { Background } from '@vue-flow/background';
 import { Controls } from '@vue-flow/controls';
 import { MiniMap } from '@vue-flow/minimap';
 import dagre from 'dagre';
+import axios from 'axios';
 import '@vue-flow/core/dist/style.css';
 import '@vue-flow/controls/dist/style.css';
 import '@vue-flow/minimap/dist/style.css';
@@ -160,6 +161,7 @@ import '@vue-flow/minimap/dist/style.css';
 const router = useRouter();
 const route = useRoute();
 const { fitView } = useVueFlow();
+const props = defineProps(['chatbot_id']);
 
 // Form State
 const title = ref('');
@@ -459,6 +461,27 @@ function parseContent(text: string) {
     isLink: urlRegex.test(part)
   })).filter(part => part.text);
 }
+
+const download = async () => {
+  try { 
+    const response = await axios.get(`/chatbots/${props.chatbot_id}/export`,{
+      responseType: 'blob', 
+    });
+
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `chatbot_${props.chatbot_id}.xml`);
+    document.body.appendChild(link);
+    
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error("Error al exportar: ", error);
+  }
+}
+
 </script>
 
 <style>

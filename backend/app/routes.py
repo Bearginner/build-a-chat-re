@@ -1,5 +1,5 @@
-import uuid 
-from flask import Blueprint, request, jsonify, session
+import uuid, xml.etree.ElementTree as ET
+from flask import Blueprint, request, jsonify, session, send_file
 from flask_login import login_user, logout_user, current_user, login_required
 from .services import (
     register_user, authenticate_user, 
@@ -7,6 +7,7 @@ from .services import (
     create_chat_session, ask_chatbot_session, get_creator_sessions, get_session_messages,
     send_contact_email, resolve_chat_session
 )
+from io import BytesIO
 
 main = Blueprint('main', __name__)
 
@@ -277,3 +278,36 @@ def update_chatbot_route(chatbot_id):
     except Exception as e:
         print(f"UPDATE ERROR: {e}")
         return jsonify({'success': False, 'error': 'Error interno del servidor'}), 500
+    
+@main.route('/chatbots/<int:chatbot_id>/export', methods=['GET'])
+def export_chatbot_xml(chatbot_id):
+    chatbot = get_chatbot(chatbot_id)
+    if not chatbot:
+        return jsonify({'success': False, 'error': 'Chatbot no encontrado'}), 404
+    
+    tree_data = get_chatbot_tree(chatbot_id)
+    root = ET.Element("chatbot_template")
+    ET.SubElement(root, "title").text = chatbot.title
+    ET.SubElement(root, "description").text = chatbot.description
+    ET.SubElement(root, "visibility").text = chatbot.visibility
+    know_tree = ET.SubElement(root, "knowledge_tree")
+    
+    def xml_nodes(parent_xml, nodes_list):
+        for node_data in nodes_list:
+            node_xml = ET.SubElement(parent_xml, "node", title = node_data['label'])
+            content_xml = ET.SubElement(node_xml, "content")
+            content_xml.text = node_data.get('content', '')
+            
+            children = node_data.get('children', [])
+            if children:
+                child_nodes = ET.SubElement(node_xml, "children")
+                xml_nodes(child_nodes, children)
+    xml_nodes(know_tree, tree_data)
+    
+    buffer = BytesIO()  
+    tree = ET.ElementTree(root)
+    tree.write(buffer, encoding = 'UTF-8', xml_declaration = True)
+    buffer.seek(0)
+    
+    return send_file(buffer, as_attachment = True, download_name = f"{chatbot.title.replace(' ', '_')}.xml")
+    
