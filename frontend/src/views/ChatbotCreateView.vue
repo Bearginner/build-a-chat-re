@@ -162,7 +162,7 @@ const route = useRoute();
 const { fitView } = useVueFlow();
 const props = defineProps(['chatbot_id']);
 const fileInput = ref(null);
-const Uploading = ref(false);
+const Upload = ref(false);
 
 // Form State
 const title = ref('');
@@ -495,11 +495,18 @@ const upload = async (event) => {
     });
 
     const result = await response.json();
-    
-    if (result.success)
-    alert("Archivo importado exitosamente")
+
+    if(result.success) {
+      alert('Archivo importado exitosamente');
+      window.location.reload();
+    } else {
+      console.error("Error: ", result.error);
+      alert('Error al importar el archivo');
+    }
   } catch (error) {
     console.error("Error al importar el archivo:", error);
+  } finally {
+    event.target.value = '';
   }
 
 }
