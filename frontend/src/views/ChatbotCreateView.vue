@@ -11,7 +11,7 @@
           <button @click="$router.push('/dashboard')" class="px-4 py-2 rounded-xl text-gray-600 hover:bg-gray-100 font-medium transition-colors">
             Cancelar
           </button>
-          <button @click="Importar" class="px-4 py-2 rounded-xl text-gray-600 hover:bg-gray-100 font-medium transition-colors">
+          <button @click="upload" class="px-4 py-2 rounded-xl text-gray-600 hover:bg-gray-100 font-medium transition-colors">
             Importar
           </button>
            <button @click="download" class="px-4 py-2 rounded-xl text-gray-600 hover:bg-gray-100 font-medium transition-colors">
@@ -162,6 +162,8 @@ const router = useRouter();
 const route = useRoute();
 const { fitView } = useVueFlow();
 const props = defineProps(['chatbot_id']);
+const fileInput = ref(null);
+const Uploading = ref(false);
 
 // Form State
 const title = ref('');
@@ -479,6 +481,27 @@ const download = async () => {
     window.URL.revokeObjectURL(url);
   } catch (error) {
     console.error("Error al exportar: ", error);
+  }
+}
+
+const upload = async (event) => {
+  const file = event.target.files[0];
+
+  if (!file) return;
+  Uploading.value = true;
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const response = await axios.post('/chatbots/import', formData, {
+      headers: {'Content-Type': 'multipart/form-data' }
+    });
+    alert('Archivo importado con éxito');
+  } catch (error) {
+    console.error(error);
+    alert("Error al importar el archivo");
+  } finally {
+    Uploading.value = false;
   }
 }
 
