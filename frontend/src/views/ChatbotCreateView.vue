@@ -153,7 +153,6 @@ import { Background } from '@vue-flow/background';
 import { Controls } from '@vue-flow/controls';
 import { MiniMap } from '@vue-flow/minimap';
 import dagre from 'dagre';
-import axios from 'axios';
 import '@vue-flow/core/dist/style.css';
 import '@vue-flow/controls/dist/style.css';
 import '@vue-flow/minimap/dist/style.css';
@@ -465,44 +464,44 @@ function parseContent(text: string) {
 }
 
 const download = async () => {
-  try { 
-    const response = await axios.get(`/chatbots/${props.chatbot_id}/export`,{
-      responseType: 'blob', 
-    });
+  try {
+    const response = await fetch(`/chatbots/${props.chatbot_id}/export`);
 
-    const url = window.URL.createObjectURL(new Blob([response.data]));
+    if (!response.ok)
+      throw new Error('Error en la descarga del archivo.');
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', `chatbot_${props.chatbot_id}.xml`);
-    document.body.appendChild(link);
-    
+    link.download = `chatbot_${props.chatbot_id}.xml`;
     link.click();
-    link.remove();
     window.URL.revokeObjectURL(url);
-  } catch (error) {
-    console.error("Error al exportar: ", error);
+
+  } catch (error){
+    console.error("Fallo al exportar:", error);
   }
 }
 
 const upload = async (event) => {
   const file = event.target.files[0];
-
-  if (!file) return;
-  Uploading.value = true;
   const formData = new FormData();
   formData.append('file', file);
 
   try {
-    const response = await axios.post('/chatbots/import', formData, {
-      headers: {'Content-Type': 'multipart/form-data' }
+    const response = await fetch('/chatbots/import', {
+      method: 'POST',
+      body: formData
     });
-    alert('Archivo importado con éxito');
+
+    const result = await response.json();
+    
+    if (result.success)
+    alert("Archivo importado exitosamente")
   } catch (error) {
-    console.error(error);
-    alert("Error al importar el archivo");
-  } finally {
-    Uploading.value = false;
+    console.error("Error al importar el archivo:", error);
   }
+
 }
 
 </script>
