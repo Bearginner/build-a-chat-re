@@ -11,12 +11,19 @@
           <button @click="$router.push('/dashboard')" class="px-4 py-2 rounded-xl text-gray-600 hover:bg-gray-100 font-medium transition-colors">
             Cancelar
           </button>
-          <button @click="upload" class="px-4 py-2 rounded-xl text-gray-600 hover:bg-gray-100 font-medium transition-colors">
-            Importar
+        <div class = "actions">
+          <input ref = "fileInput" type = "file" @change = "Importing" accept = ".xml" style = "display: none" />
+          <button @click="$refs.fileInput.click()" class = "action-btn import" :disabled = "Uploading">
+            <FileUp v-if = "!Uploading" :size = "20"/>
+            <Loader2 v-else class = "spinner" :size = "20"/>
+            <span> {{ Uploading ? "Importando archivo." : 'Importar' }}</span>
           </button>
-           <button @click="download" class="px-4 py-2 rounded-xl text-gray-600 hover:bg-gray-100 font-medium transition-colors">
-            Exportar
+           <button @click="Exporting" class="action-btn export" :disabled = "Downloading">
+            <Download v-if = "!Downloading" :size = "20"/>
+            <Loader2 v-else class = "spinner" :size = "20"/>
+            <span> {{ Downloading ? "Exportando archivo." : "Exportar" }}</span>
           </button>
+        </div>
           <button @click="saveChatbot" :disabled="saving" class="px-6 py-2 rounded-xl bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200 disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2">
             <span v-if="saving" class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>
             {{ saving ? 'Guardando...' : 'Publicar Chatbot' }}
@@ -152,6 +159,7 @@ import { VueFlow, useVueFlow } from '@vue-flow/core';
 import { Background } from '@vue-flow/background';
 import { Controls } from '@vue-flow/controls';
 import { MiniMap } from '@vue-flow/minimap';
+import { FileUp, Download, Loader2 } from 'lucide-vue-next';
 import dagre from 'dagre';
 import '@vue-flow/core/dist/style.css';
 import '@vue-flow/controls/dist/style.css';
@@ -160,9 +168,10 @@ import '@vue-flow/minimap/dist/style.css';
 const router = useRouter();
 const route = useRoute();
 const { fitView } = useVueFlow();
-const props = defineProps(['chatbot_id']);
+const props = defineProps(['chatbot.id', 'chatbot.title']);
 const fileInput = ref(null);
-const Upload = ref(false);
+const Uploading = ref(false);
+const Downloading = ref(false);
 
 // Form State
 const title = ref('');
@@ -463,9 +472,13 @@ function parseContent(text: string) {
   })).filter(part => part.text);
 }
 
-const download = async () => {
+const Exporting = async () => {
+  if (!props.chatbot.id) 
+      return;
+  Downloading.value = true;
+
   try {
-    const response = await fetch(`/chatbots/${props.chatbot_id}/export`);
+    const response = await fetch(`/chatbots/${props.chatbot.id}/export`);
 
     if (!response.ok)
       throw new Error('Error en la descarga del archivo.');
@@ -474,17 +487,25 @@ const download = async () => {
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `chatbot_${props.chatbot_id}.xml`;
+    const name = props.chatbot.title ? props.chatbot.title.replace(/\s+/g, '_') : props.chatbot.id;
+    link.download = `${name}.xml`;
+    document.body.appendChild(link);
     link.click();
+    link.remove();
     window.URL.revokeObjectURL(url);
 
   } catch (error){
     console.error("Fallo al exportar:", error);
+  } finally {
+    Downloading.value = false;
   }
 }
 
-const upload = async (event) => {
+const Importing = async (event) => {
   const file = event.target.files[0];
+  if (!file) 
+      return;
+  Uploading.value = true;
   const formData = new FormData();
   formData.append('file', file);
 
@@ -529,4 +550,51 @@ const upload = async (event) => {
   stroke: #94a3b8;
   stroke-width: 2;
 }
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  padding: 10px;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+}
+
+.export, .import{
+  background-color: #0066FF;
+  color: #FFFF;
+}
+
+.export:hover {
+  background-color: #0052CC;
+}
+
+.import:hover {
+  background-color: #E5E7EB;
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 </style>
