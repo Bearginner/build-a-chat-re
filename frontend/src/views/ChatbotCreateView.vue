@@ -168,7 +168,7 @@ import '@vue-flow/minimap/dist/style.css';
 const router = useRouter();
 const route = useRoute();
 const { fitView } = useVueFlow();
-const props = defineProps(['user.id', 'chatbot.id', 'chatbot.title']);
+const props = defineProps(['userId', 'chatbotId', 'chatbotTitle']);
 const fileInput = ref(null);
 const Uploading = ref(false);
 const Downloading = ref(false);
@@ -473,12 +473,12 @@ function parseContent(text: string) {
 }
 
 const Exporting = async () => {
-  if (!props.chatbot.id) 
+  if (!props.chatbotId) 
       return;
   Downloading.value = true;
 
   try {
-    const response = await fetch(`/chatbots/${props.chatbot.id}/export`);
+    const response = await fetch(`/chatbots/${props.chatbotId}/export`);
 
     if (!response.ok)
       throw new Error('Error en la descarga del archivo.');
@@ -487,11 +487,10 @@ const Exporting = async () => {
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    const name = props.chatbot.title ? props.chatbot.title.replace(/\s+/g, '_') : props.chatbot.id;
+    const name = props.chatbotTitle ? props.chatbotTitle.replace(/\s+/g, '_') : props.chatbotId;
     link.download = `${name}.xml`;
     document.body.appendChild(link);
     link.click();
-    link.remove();
     window.URL.revokeObjectURL(url);
 
   } catch (error){
@@ -508,7 +507,7 @@ const Importing = async (event) => {
   Uploading.value = true;
   const formData = new FormData();
   formData.append('file', file);
-  formData.append('user_id', props.user.id);
+  formData.append('user_id', props.userId);
 
   try {
     const response = await fetch('/chatbots/import', {
