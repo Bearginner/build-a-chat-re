@@ -321,13 +321,13 @@ def import_chatbot_xml():
         tree = ET.parse(file)
         root = tree.getroot()
         title = root.find("title").text
-        description = root.find("description").text
+        description = root.find("description").text or ""
         visibility = root.find("visibility").text
         
         def xml_to_json(node_xml):
             node_json = {
                 "label": node_xml.get("title"),
-                "content": node_xml.find("content").text,
+                "content": node_xml.find("content").text or "",
                 "children": []
             }
             child_nodes = node_xml.find("children")
@@ -338,7 +338,7 @@ def import_chatbot_xml():
         
         know_tree = root.find("knowledge_tree")
         tree_json = []
-        
+
         if know_tree is not None:
             first_node = know_tree.find("node")
             if first_node is not None:
@@ -350,5 +350,6 @@ def import_chatbot_xml():
         return jsonify({'success': True, 'msg': 'Importación exitosa', 'chatbot_id': new_chatbot.id}), 201
     
     except Exception as e:
+        db.session.rollback()
         return jsonify({'success': False, 'error': 'Error al importar la plantilla'}), 500
         
