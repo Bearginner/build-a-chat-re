@@ -478,7 +478,7 @@ const Exporting = async () => {
   Downloading.value = true;
 
   try {
-    const response = await fetch(`/chatbots/${props.chatbotId}/export`);
+    const response = await fetch(`/api/chatbots/${props.chatbotId}/export`);
 
     if (!response.ok)
       throw new Error('Error en la descarga del archivo.');
@@ -486,11 +486,12 @@ const Exporting = async () => {
     const blob = await response.blob();
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
+
     link.href = url;
-    const name = props.chatbotTitle ? props.chatbotTitle.replace(/\s+/g, '_') : props.chatbotId;
-    link.download = `${name}.xml`;
+    link.download = `${props.chatbotTitle}.xml`;
     document.body.appendChild(link);
     link.click();
+    document.body.removeChild(link);
     window.URL.revokeObjectURL(url);
 
   } catch (error){
@@ -510,7 +511,7 @@ const Importing = async (event) => {
   formData.append('user_id', props.userId);
 
   try {
-    const response = await fetch('/chatbots/import', {
+    const response = await fetch('/api/chatbots/import', {
       method: 'POST',
       body: formData
     });
