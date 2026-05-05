@@ -486,13 +486,13 @@ const Exporting = async () => {
     const blob = await response.blob();
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
-
     link.href = url;
     link.download = `${props.chatbotTitle}.xml`;
     document.body.appendChild(link);
     link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
+    
+    setTimeout(() => { document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);}, 100);
 
   } catch (error){
     console.error("Fallo al exportar:", error);
