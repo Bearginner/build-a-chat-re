@@ -472,40 +472,11 @@ function parseContent(text: string) {
   })).filter(part => part.text);
 }
 
-const Exporting = async () => {
-  if (!props.chatbotId) 
-      return;
-  Downloading.value = true;
-
-  try {
-    const response = await fetch(`/api/chatbots/${props.chatbotId}/export`);
-
-    if (!response.ok)
-      throw new Error('Error en la descarga del archivo.');
-
-    const blob = await response.blob();
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${props.chatbotTitle}.xml`;
-    document.body.appendChild(link);
-    link.click();
-    
-    setTimeout(() => { document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);}, 100);
-
-  } catch (error){
-    console.error("Fallo al exportar:", error);
-  } finally {
-    Downloading.value = false;
-  }
-}
-
 const Importing = async (event) => {
   const file = event.target.files[0];
   if (!file) 
       return;
-  Uploading.value = true;
+
   const formData = new FormData();
   formData.append('file', file);
   formData.append('user_id', props.userId);
@@ -516,22 +487,43 @@ const Importing = async (event) => {
       body: formData
     });
 
-    const result = await response.json();
+    const text = await response.text();
+    try{
+      const data = JSON.parse(text);
+      if (data.success){
+        alert ("Archivo importado.");
+      } else {
+        alert ("Error al importar: " + data.error);
+      }
 
-    if(result.success) {
-      alert('Archivo importado exitosamente');
-      window.location.reload();
-    } else {
-      console.error("Error: ", result.error);
-      alert('Error al importar el archivo');
+    } catch (e) {
+      console.error("El servidor respondió con un formato inesperado: ", text);
     }
-  } catch (error) {
-    console.error("Error al importar el archivo:", error);
-  } finally {
-    Uploading.value = false;
-    event.target.value = '';
+
+  } catch (error){
+    alert("Error de conexión.")
   }
 
+}
+
+const Exporting = async () => {
+  try {
+    const response = await fetch(`/api/chatbots/${props.chatbotId}/export`);
+    if (!response.ok)
+        throw new Error("Error en el servidor.");
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${props.chatbotTitle}.xml`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  } catch (error){
+    console.error("Fallo al exportar:", error);
+  } 
 }
 
 </script>

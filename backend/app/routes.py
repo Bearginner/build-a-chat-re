@@ -279,45 +279,14 @@ def update_chatbot_route(chatbot_id):
         print(f"UPDATE ERROR: {e}")
         return jsonify({'success': False, 'error': 'Error interno del servidor'}), 500
     
-@main.route('/chatbots/<int:chatbot_id>/export', methods=['GET'])
-def export_chatbot_xml(chatbot_id):
-    chatbot = get_chatbot(chatbot_id)
-    if not chatbot:
-         return jsonify({'success': False, 'error': 'Chatbot no encontrado'}), 404
-    
-    tree_data = get_chatbot_tree(chatbot_id)
-    root = ET.Element("chatbot_template")
-    ET.SubElement(root, "title").text = chatbot.title
-    ET.SubElement(root, "description").text = chatbot.description
-    ET.SubElement(root, "visibility").text = chatbot.visibility
-    know_tree = ET.SubElement(root, "knowledge_tree")
-    
-    def xml_nodes(parent_xml, nodes_list):
-        for node_data in nodes_list:
-            node_xml = ET.SubElement(parent_xml, "node", title = node_data['label'])
-            content_xml = ET.SubElement(node_xml, "content")
-            content_xml.text = node_data.get('content', '')
-            
-            children = node_data.get('children', [])
-            if children:
-                child_nodes = ET.SubElement(node_xml, "children")
-                xml_nodes(child_nodes, children)
-    xml_nodes(know_tree, tree_data)
-    
-    buffer = BytesIO()  
-    tree = ET.ElementTree(root)
-    tree.write(buffer, encoding = 'UTF-8', xml_declaration = True)
-    buffer.seek(0)
-
-    return send_file(buffer, as_attachment = True, download_name = f"{chatbot.title.replace(' ', '_')}.xml")
-    
 @main.route('/chatbots/import', methods=['POST'])
 def import_chatbot_xml():
-    if 'file' not in request.files:
-        return jsonify({'error': 'No se subió ningún archivo'}), 400
-    file = request.files['file']
+    try:
+        if 'file' not in request.files:
+            return jsonify({'error': 'No se subió ningún archivo'}), 400
     
-    try: 
+        file = request.files['file']
+    
         tree = ET.parse(file)
         root = tree.getroot()
         title = root.find("title").text
@@ -351,5 +320,47 @@ def import_chatbot_xml():
     
     except Exception as e:
         db.session.rollback()
+        print(f"DEBUG IMPORT ERROR: {str(e)}")
         return jsonify({'success': False, 'error': 'Error al importar la plantilla'}), 500
         
+@main.route('/chatbots/<int:chatbot_id>/export', methods=['GET'])
+def export_chatbot_xml(chatbot_id):
+    try:
+        chatbot = get_chatbot(chatbot_id)
+        if not chatbot:
+         return jsonify({'success': False, 'error': 'Chatbot no encontrado'}), 404
+    
+        tree_data = get_chatbot_tree(chatbot_id)
+        root = ET.Element("chatbot_template")
+        ET.SubElement(root, "title").text = chatbot.title
+        ET.SubElement(root, "description").text = chatbot.description
+        ET.SubElement(root, "visibility").text = chatbot.visibility
+        know_tree = ET.SubElement(root, "knowledge_tree")
+    
+        def xml_nodes(parent_xml, nodes_list):
+            for node_data in nodes_list:
+                node_xml = ET.SubElement(parent_xml, "node", title = node_data['label'])
+                content_xml = ET.SubElement(node_xml, "content")
+                content_xml.text = node_data.get('content', '')
+            
+                children = node_data.get('children', [])
+                if children:
+                    child_nodes = ET.SubElement(node_xml, "children")
+                    xml_nodes(child_nodes, children)
+        xml_nodes(know_tree, tree_data)
+    
+        buffer = BytesIO()  
+        tree = ET.ElementTree(root)
+        tree.write(buffer, encoding = 'UTF-8', xml_declaration = True)
+        buffer.seek(0)
+
+        return send_file(
+            buffer, 
+            as_attachment = True, 
+            download_name = f"{chatbot.title.replace(' ', '_')}.xml",
+            mimetype = 'application/xml' )
+        
+    except Exception as e:
+        print(f"DEBUG EXPORT ERROR: {str(e)}")
+        return jsonify({'success': False, 'error': 'Error al exportar la plantilla'}), 500
+    
