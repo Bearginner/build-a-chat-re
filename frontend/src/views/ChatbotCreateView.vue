@@ -168,7 +168,8 @@ import '@vue-flow/minimap/dist/style.css';
 const router = useRouter();
 const route = useRoute();
 const { fitView } = useVueFlow();
-const props = defineProps(['userId', 'chatbotId', 'chatbotTitle']);
+const chatbotId = ref<string | number>('');
+const props = defineProps(['userId', 'chatbotTitle']);
 const fileInput = ref(null);
 const isUploading = ref(false);
 const isDownloading = ref(false);
@@ -317,6 +318,7 @@ async function fetchChatbotDetails(id: string) {
         const data = await response.json();
         
         if (data.success) {
+            chatbotId.value = id;
             title.value = data.chatbot.title;
             description.value = data.chatbot.description;
             visibility.value = data.chatbot.visibility;
