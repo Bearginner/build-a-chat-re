@@ -287,7 +287,7 @@ def export_chatbot_xml(chatbot_id):
         if not chatbot:
          return jsonify({'success': False, 'error': 'Chatbot no encontrado'}), 404
     
-        root = ET.Element("chatbot_template")
+        root = ET.Element("assistant_template")
         ET.SubElement(root, "title").text = str(chatbot.title)
         ET.SubElement(root, "description").text = str(chatbot.description or "")
         ET.SubElement(root, "visibility").text = str(chatbot.visibility)
@@ -353,11 +353,11 @@ def import_chatbot_xml():
                     node_json["children"].append(xml_to_json(child_el))
             return node_json
         
-        know_tree = root.find("knowledge_tree")
+        knowledge_tree = root.find("knowledge_tree")
         tree_json = []
 
-        if know_tree is not None:
-            first_node = know_tree.find("node")
+        if knowledge_tree is not None:
+            first_node = knowledge_tree.find("node")
             if first_node is not None:
                 tree_json = xml_to_json(first_node)
         
