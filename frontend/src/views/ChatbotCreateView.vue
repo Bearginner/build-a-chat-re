@@ -474,8 +474,7 @@ function parseContent(text: string) {
 
 const Importing = async (event) => {
   const file = event.target.files[0];
-  if (!file) 
-      return;
+  if (!file) return;
 
   const formData = new FormData();
   formData.append('file', file);

@@ -7,6 +7,7 @@ from .services import (
     create_chat_session, ask_chatbot_session, get_creator_sessions, get_session_messages,
     send_contact_email, resolve_chat_session
 )
+from .models import db
 from io import BytesIO
 
 main = Blueprint('main', __name__)
@@ -278,51 +279,7 @@ def update_chatbot_route(chatbot_id):
     except Exception as e:
         print(f"UPDATE ERROR: {e}")
         return jsonify({'success': False, 'error': 'Error interno del servidor'}), 500
-    
-@main.route('/chatbots/import', methods=['POST'])
-def import_chatbot_xml():
-    try:
-        if 'file' not in request.files:
-            return jsonify({'error': 'No se subió ningún archivo'}), 400
-    
-        file = request.files['file']
-    
-        tree = ET.parse(file)
-        root = tree.getroot()
-        title = root.find("title").text
-        description = root.find("description").text or ""
-        visibility = root.find("visibility").text
-        
-        def xml_to_json(node_xml):
-            node_json = {
-                "label": node_xml.get("title"),
-                "content": node_xml.find("content").text or "",
-                "children": []
-            }
-            child_nodes = node_xml.find("children")
-            if child_nodes is not None:
-                for child_el in child_nodes.findall("node"):
-                    node_json["children"].append(xml_to_json(child_el))
-            return node_json
-        
-        know_tree = root.find("knowledge_tree")
-        tree_json = []
 
-        if know_tree is not None:
-            first_node = know_tree.find("node")
-            if first_node is not None:
-                tree_json = xml_to_json(first_node)
-        
-        user_id = request.form.get('user_id')
-        new_chatbot = create_chatbot(user_id, title, description, visibility, tree_json)
-        
-        return jsonify({'success': True, 'msg': 'Importación exitosa', 'chatbot_id': new_chatbot.id}), 201
-    
-    except Exception as e:
-        db.session.rollback()
-        print(f"DEBUG IMPORT ERROR: {str(e)}")
-        return jsonify({'success': False, 'error': 'Error al importar la plantilla'}), 500
-        
 @main.route('/chatbots/<int:chatbot_id>/export', methods=['GET'])
 def export_chatbot_xml(chatbot_id):
     try:
@@ -363,4 +320,55 @@ def export_chatbot_xml(chatbot_id):
     except Exception as e:
         print(f"DEBUG EXPORT ERROR: {str(e)}")
         return jsonify({'success': False, 'error': 'Error al exportar la plantilla'}), 500
+        
+@main.route('/chatbots/import', methods=['POST'])
+def import_chatbot_xml():
+    if 'file' not in request.files:
+         return jsonify({'success': False, 'error': 'No se subió ningún archivo'}), 400
     
+    file = request.files['file']
+    try:
+        file.seek(0)
+        xml_content = file.read().decode('UTF-8')
+        
+        if not xml_content.strip():
+            return jsonify({
+                'success': False, 'error': 'Archivo XML vacío.'}), 400
+        
+        root = ET.fromstring(xml_content)
+        title = root.find("title").text
+        description = root.find("description").text or ""
+        visibility = root.find("visibility").text
+        
+        def xml_to_json(node_xml):
+            node_json = {
+                "label": node_xml.get("title"),
+                "content": node_xml.find("content").text or "",
+                "children": []
+            }
+            child_nodes = node_xml.find("children")
+            if child_nodes is not None:
+                for child_el in child_nodes.findall("node"):
+                    node_json["children"].append(xml_to_json(child_el))
+            return node_json
+        
+        know_tree = root.find("knowledge_tree")
+        tree_json = []
+
+        if know_tree is not None:
+            first_node = know_tree.find("node")
+            if first_node is not None:
+                tree_json = xml_to_json(first_node)
+        
+        user_id = request.form.get('user_id')
+        new_chatbot = create_chatbot(user_id, title, description, visibility, tree_json)
+        
+        return jsonify({'success': True, 'msg': 'Importación exitosa', 'chatbot_id': new_chatbot.id}), 201
+    
+    except ET.parseError as e:
+        return jsonify({'success': False, 'error': f"Error al parsear XML: {str(e)}"}), 400
+    
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': 'Error al importar la plantilla'}), 500
+        
