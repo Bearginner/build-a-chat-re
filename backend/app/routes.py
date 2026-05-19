@@ -7,7 +7,7 @@ from .services import (
     create_chat_session, ask_chatbot_session, get_creator_sessions, get_session_messages,
     send_contact_email, resolve_chat_session
 )
-from .models import db
+from .models import db, Chatbot, Node
 from io import BytesIO
 
 main = Blueprint('main', __name__)
@@ -283,28 +283,29 @@ def update_chatbot_route(chatbot_id):
 @main.route('/chatbots/<int:chatbot_id>/export', methods=['GET'])
 def export_chatbot_xml(chatbot_id):
     try:
-        chatbot = get_chatbot(chatbot_id)
+        chatbot = db.session.get(Chatbot, chatbot_id)
         if not chatbot:
          return jsonify({'success': False, 'error': 'Chatbot no encontrado'}), 404
     
-        tree_data = get_chatbot_tree(chatbot_id)
         root = ET.Element("chatbot_template")
-        ET.SubElement(root, "title").text = chatbot.title
-        ET.SubElement(root, "description").text = chatbot.description
-        ET.SubElement(root, "visibility").text = chatbot.visibility
-        know_tree = ET.SubElement(root, "knowledge_tree")
+        ET.SubElement(root, "title").text = str(chatbot.title)
+        ET.SubElement(root, "description").text = str(chatbot.description or "")
+        ET.SubElement(root, "visibility").text = str(chatbot.visibility)
+        knowledge_tree = ET.SubElement(root, "knowledge_tree")
     
-        def xml_nodes(parent_xml, nodes_list):
-            for node_data in nodes_list:
-                node_xml = ET.SubElement(parent_xml, "node", title = node_data['label'])
-                content_xml = ET.SubElement(node_xml, "content")
-                content_xml.text = node_data.get('content', '')
-            
-                children = node_data.get('children', [])
-                if children:
-                    child_nodes = ET.SubElement(node_xml, "children")
-                    xml_nodes(child_nodes, children)
-        xml_nodes(know_tree, tree_data)
+        def xml_nodes(parent_xml, parent_node_id):
+            nodes = Node.query.filter_by(chatbot_id = chatbot_id, parent_node_id = parent_node_id).all()
+            for node in nodes:
+                node_element = ET.SubElement(parent_xml, "node", title = str(node.label))
+                content_element = ET.SubElement(node_element, "content")
+                content_element.text = str(node.content or "")
+                
+                has_children = Node.query.filter_by(chatbot_id = chatbot_id, parent_node_id = node.id).first()    
+                if has_children:
+                    children_wrapper = ET.SubElement(node_element, "children")
+                    xml_nodes(children_wrapper, node.id)
+                    
+        xml_nodes(knowledge_tree, None)
     
         buffer = BytesIO()  
         tree = ET.ElementTree(root)
