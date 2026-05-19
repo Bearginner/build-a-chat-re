@@ -13,15 +13,15 @@
           </button>
         <div class = "actions">
           <input ref = "fileInput" type = "file" @change = "Importing" accept = ".xml" style = "display: none" />
-          <button @click="$refs.fileInput.click()" class = "action-btn import" :disabled = "Uploading">
-            <FileUp v-if = "!Uploading" :size = "20"/>
+          <button @click="$refs.fileInput.click()" class = "action-btn import" :disabled = "isUploading">
+            <FileUp v-if = "!isUploading" :size = "20"/>
             <Loader2 v-else class = "spinner" :size = "20"/>
-            <span> {{ Uploading ? "Importando archivo..." : 'Importar' }}</span>
+            <span> {{ isUploading ? "Importando archivo..." : 'Importar' }}</span>
           </button>
-           <button @click="Exporting" class="action-btn export" :disabled = "Downloading">
-            <Download v-if = "!Downloading" :size = "20"/>
+           <button @click="Exporting" class="action-btn export" :disabled = "isDownloading">
+            <Download v-if = "!isDownloading" :size = "20"/>
             <Loader2 v-else class = "spinner" :size = "20"/>
-            <span> {{ Downloading ? "Exportando archivo..." : "Exportar" }}</span>
+            <span> {{ isDownloading ? "Exportando archivo..." : "Exportar" }}</span>
           </button>
         </div>
           <button @click="saveChatbot" :disabled="saving" class="px-6 py-2 rounded-xl bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200 disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2">
@@ -170,8 +170,8 @@ const route = useRoute();
 const { fitView } = useVueFlow();
 const props = defineProps(['userId', 'chatbotId', 'chatbotTitle']);
 const fileInput = ref(null);
-const Uploading = ref(false);
-const Downloading = ref(false);
+const isUploading = ref(false);
+const isDownloading = ref(false);
 
 // Form State
 const title = ref('');
@@ -506,23 +506,33 @@ const Importing = async (event) => {
 }
 
 const Exporting = async () => {
-  try {
+ if (!props.chatbotId || props.chatbotId === 'undefined') {
+  alert("No se puede exportar. El chatbot no se ha guardado correctamente.")
+  return;
+ }
+
+ isDownloading.value = true;
+ try {
     const response = await fetch(`/api/chatbots/${props.chatbotId}/export`);
     if (!response.ok)
-        throw new Error("Error en el servidor.");
+      throw new Error("Error en el servidor.");
 
     const blob = await response.blob();
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
+
     link.href = url;
-    link.download = `${props.chatbotTitle}.xml`;
+    link.setAttribute('download', `${props.chatbotTitle || 'asistente'}.xml`);
     document.body.appendChild(link);
     link.click();
-    link.remove();
+    document.body.removeChild(link);
     window.URL.revokeObjectURL(url);
-  } catch (error){
-    console.error("Fallo al exportar:", error);
-  } 
+ } catch (error){
+    alert("Error al exportar la plantilla. Vuelva a intentar.");
+ } finally {
+    isDownloading.value = false;
+ }
+
 }
 
 </script>
