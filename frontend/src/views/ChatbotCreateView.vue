@@ -11,16 +11,16 @@
           <button @click="$router.push('/dashboard')" class="px-4 py-2 rounded-xl text-gray-600 hover:bg-gray-100 font-medium transition-colors">
             Cancelar
           </button>
-        <div class = "actions">
+        <div class = "actions" flex gap-2>
           <input ref = "fileInput" type = "file" @change = "Importing" accept = ".xml" style = "display: none" />
-          <button @click="$refs.fileInput.click()" class = "action-btn import" :disabled = "isUploading">
-            <FileUp v-if = "!isUploading" :size = "20"/>
-            <Loader2 v-else class = "spinner" :size = "20"/>
+          <button @click="fileInput?.click()" class = "action-btn import" :disabled = "isUploading">
+            <FileUp v-if = "!isUploading" :size = "18"/>
+            <Loader2 v-else class = "animate-spin" :size = "18"/>
             <span> {{ isUploading ? "Importando archivo..." : 'Importar' }}</span>
           </button>
-           <button @click="Exporting" class="action-btn export" :disabled = "isDownloading">
-            <Download v-if = "!isDownloading" :size = "20"/>
-            <Loader2 v-else class = "spinner" :size = "20"/>
+           <button @click="Exporting" class="action-btn export" :disabled = "isDownloading || !currentId">
+            <Download v-if = "!isDownloading" :size = "18"/>
+            <Loader2 v-else class = "animate-spin" :size = "18"/>
             <span> {{ isDownloading ? "Exportando archivo..." : "Exportar" }}</span>
           </button>
         </div>
@@ -168,19 +168,20 @@ import '@vue-flow/minimap/dist/style.css';
 const router = useRouter();
 const route = useRoute();
 const { fitView } = useVueFlow();
-const chatbotId = ref<string | number>('');
-const props = defineProps(['userId', 'chatbotTitle']);
-const fileInput = ref(null);
+const fileInput = ref<HTMLInputElement | null>(null);
 const isUploading = ref(false);
 const isDownloading = ref(false);
+
 
 // Form State
 const title = ref('');
 const description = ref('');
 const visibility = ref('public');
 const saving = ref(false);
-const isEditMode = computed(() => !!route.params.id);
-
+//const isEditMode = computed(() => !!route.params.id);
+const isEditMode = ref(false)
+const currentId = ref<string | number>(route.params.id || '');
+  
 // Tree State
 const treeInput = ref('Raíz\n  Hijo 1\n    Nieto 1.1\n  Hijo 2');
 const elements = ref<any[]>([]);
@@ -318,7 +319,7 @@ async function fetchChatbotDetails(id: string) {
         const data = await response.json();
         
         if (data.success) {
-            chatbotId.value = id;
+            currentId.value = id;
             title.value = data.chatbot.title;
             description.value = data.chatbot.description;
             visibility.value = data.chatbot.visibility;
@@ -474,57 +475,24 @@ function parseContent(text: string) {
   })).filter(part => part.text);
 }
 
-const Importing = async (event) => {
-  const file = event.target.files[0];
-  if (!file) return;
-
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('user_id', props.userId);
-
-  try {
-    const response = await fetch('/api/chatbots/import', {
-      method: 'POST',
-      body: formData
-    });
-
-    const text = await response.text();
-    try{
-      const data = JSON.parse(text);
-      if (data.success){
-        alert ("Archivo importado.");
-      } else {
-        alert ("Error al importar: " + data.error);
-      }
-
-    } catch (e) {
-      console.error("El servidor respondió con un formato inesperado: ", text);
-    }
-
-  } catch (error){
-    alert("Error de conexión.")
-  }
-
-}
-
 const Exporting = async () => {
- if (!props.chatbotId || props.chatbotId === 'undefined') {
+ if (!currentId.value) {
   alert("No se puede exportar. El chatbot no se ha guardado correctamente.")
   return;
  }
 
  isDownloading.value = true;
  try {
-    const response = await fetch(`/api/chatbots/${props.chatbotId}/export`);
+    const response = await fetch(`/api/chatbots/${currentId.value}/export`);
     if (!response.ok)
       throw new Error("Error en el servidor.");
 
     const blob = await response.blob();
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
-
     link.href = url;
-    link.setAttribute('download', `${props.chatbotTitle || 'asistente'}.xml`);
+    const fileName = title.value ? title.value.replace(/\s+/g, '_') : 'asistente';
+    link.setAttribute('download', `${fileName}.xml`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -534,6 +502,46 @@ const Exporting = async () => {
  } finally {
     isDownloading.value = false;
  }
+
+}
+
+const Importing = async (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  const file = target.files;
+  if (!file || file.length === 0) 
+      return;
+
+  isUploading.value = true;    
+  const formData = new FormData();
+  formData.append('file', file[0]);
+
+  try {
+    const response = await fetch('/api/chatbots/import', {
+      method: 'POST',
+      body: formData
+    });
+
+    const textResponse = await response.text();
+    let data;
+    try {
+      data = JSON.parse(textResponse);
+    } catch (e) {
+      console.error("El servidor respondió con un formato inesperado: ", textResponse);
+    }
+
+    if (data.success){
+      alert ("Archivo importado correctamente.");
+    } else {
+      alert ("Error al importar: " + data.error);
+    }
+
+  } catch (error){
+    console.error("Error al importar el archivo: ", error);
+  } finally {
+    isUploading.value = false;
+    if (target)
+      target.value = '';
+  }
 
 }
 
